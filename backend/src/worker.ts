@@ -1,28 +1,8 @@
 ﻿import { salvar, buscar } from "./store";
-import { TipoDocumento, TranscricaoValue, HoleritePage } from "./types";
+import { TipoDocumento, TranscricaoValue, HoleritePage, CartaoPontoPage } from "./types";
 import { extrairTextoPorPagina } from "./pdfText";
 import { tentarParsearHolerite } from "./holeriteRouter";
-
-// TODO (proximo passo): extrator real de cartao de ponto. Por enquanto
-// mantem o mock so pra esse tipo, ate implementarmos o parser dedicado.
-function mockCartaoPonto() {
-  return {
-    pages: [
-      {
-        page: 1,
-        days: [
-          {
-            date_raw: "01/05/2024",
-            punches: [
-              { kind: "IN" as const, time_raw: "08:00", time_hhmm: "08:00" },
-              { kind: "OUT" as const, time_raw: "17:00", time_hhmm: "17:00" },
-            ],
-          },
-        ],
-      },
-    ],
-  };
-}
+import { tentarParsearCartaoPonto } from "./cartaoPontoTexto";
 
 async function processarHolerite(buffer: Buffer): Promise<TranscricaoValue> {
   const paginasTexto = await extrairTextoPorPagina(buffer);
@@ -40,11 +20,30 @@ async function processarHolerite(buffer: Buffer): Promise<TranscricaoValue> {
   return { pages };
 }
 
+async function processarCartaoPonto(buffer: Buffer): Promise<TranscricaoValue> {
+  const paginasTexto = await extrairTextoPorPagina(buffer);
+  const pages: CartaoPontoPage[] = [];
+
+  for (const p of paginasTexto) {
+    const reconhecido = tentarParsearCartaoPonto(p.texto, p.page);
+    if (reconhecido) {
+      pages.push(reconhecido);
+    } else {
+      // Sem camada de texto reconhecivel (documento escaneado) - OCR ainda
+      // nao implementado pra cartao de ponto. Pagina fica honestamente
+      // vazia em vez de sumir ou inventar dado.
+      pages.push({ page: p.page, days: [] });
+    }
+  }
+
+  return { pages };
+}
+
 export function iniciarProcessamento(id: string, buffer: Buffer, tipo: TipoDocumento): void {
   (async () => {
     try {
       const value: TranscricaoValue =
-        tipo === "holerite" ? await processarHolerite(buffer) : mockCartaoPonto();
+        tipo === "holerite" ? await processarHolerite(buffer) : await processarCartaoPonto(buffer);
 
       const atual = buscar(id);
       if (!atual) return;
