@@ -1,18 +1,18 @@
 ﻿import fs from "fs";
 import path from "path";
 import { extrairTextoPorPagina } from "./pdfText";
-import { tentarLayoutFichaFinanceira } from "./holeriteFichaFinanceira";
+import { tentarLayoutDeclaracao } from "./holeriteDeclaracao";
 
 async function main() {
   const pasta = path.join(__dirname, "..", "..", "exemplos");
-  const buffer = fs.readFileSync(path.join(pasta, "payroll-01.pdf"));
+  const buffer = fs.readFileSync(path.join(pasta, "payroll-02.pdf"));
   const paginas = await extrairTextoPorPagina(buffer);
 
   for (const p of paginas) {
-    const resultado = tentarLayoutFichaFinanceira(p.texto, p.page);
+    const resultado = tentarLayoutDeclaracao(p.texto, p.page);
     console.log(`\n=== pagina ${p.page} ===`);
     if (!resultado) {
-      console.log("NAO RECONHECIDO pelo layout ficha financeira");
+      console.log("NAO RECONHECIDO pelo layout declaracao");
       continue;
     }
     for (const competencia of resultado) {
