@@ -1,11 +1,11 @@
-import { HoleritePage, HoleriteField, HoleriteBase } from "./types";
+ï»¿import { HoleritePage, HoleriteField, HoleriteBase } from "./types";
 
 // Layout "tabular": cabecalho "Cod. Descricao | Unidade | Proventos | Descontos",
 // bloco de bases logo apos "Total", com rotulos fixos (Base I.N.S.S., F.G.T.S. do Mes, etc).
 
-const RE_ASSINATURA = /Cod\.\s*Descri[cç][aã]o/i;
-const RE_PERIODO = /Per[ií]odo\s*:\s*(\d{2})\/(\d{4})/i;
-const RE_HEADER = /Cod\.\s*Descri[cç][aã]o/i;
+const RE_ASSINATURA = /Cod\.\s*Descri[c\u00e7][a\u00e3]o/i;
+const RE_PERIODO = /Per[i\u00ed]odo\s*:\s*(\d{2})\/(\d{4})/i;
+const RE_HEADER = /Cod\.\s*Descri[c\u00e7][a\u00e3]o/i;
 const RE_TOTAL = /^Total\b/i;
 const RE_NUMERO = /^-?[\d.]+,\d{2}$/; // formato BR: 1.678,61
 
@@ -38,10 +38,10 @@ function parseLinhaCampo(linha: string): HoleriteField | null {
 const PADROES_BASES: { rotulo: string; regex: RegExp }[] = [
   { rotulo: "Base INSS", regex: /Base\s+I\.?N\.?S\.?S\.?\s*:\s*([\d.,]+)/i },
   { rotulo: "Base IR", regex: /Base\s+I\.?R\.?R\.?F\.?\s*:\s*([\d.,]+)/i },
-  { rotulo: "FGTS", regex: /F\.?G\.?T\.?S\.?\s*do\s*M[eê]s\s*:\s*([\d.,]+)/i },
+  { rotulo: "FGTS", regex: /F\.?G\.?T\.?S\.?\s*do\s*M[e\u00ea]s\s*:\s*([\d.,]+)/i },
   { rotulo: "Total Vencimentos", regex: /^Total[\t ]+([\d.,]+)/im },
   { rotulo: "Total Descontos", regex: /^Total[\t ]+[\d.,]+[\t ]+([\d.,]+)/im },
-  { rotulo: "Valor Líquido", regex: /L[ií]q[uü]ido\s*\t?([\d.,]+)/i },
+  { rotulo: "Valor L\u00edquido", regex: /L[i\u00ed]q[u\u00fc]ido\s*\t?([\d.,]+)/i },
 ];
 
 function extrairBases(texto: string): HoleriteBase[] {
