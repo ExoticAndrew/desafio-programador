@@ -3,6 +3,8 @@ import { TipoDocumento, TranscricaoValue, HoleritePage, CartaoPontoPage } from "
 import { extrairTextoPorPagina } from "./pdfText";
 import { tentarParsearHolerite } from "./holeriteRouter";
 import { tentarParsearCartaoPonto } from "./cartaoPontoTexto";
+import { tentarParsearCartaoPontoOCR } from "./cartaoPontoOCR";
+import { renderizarPaginaComoImagem, ocrImagem } from "./ocr";
 
 async function processarHolerite(buffer: Buffer): Promise<TranscricaoValue> {
   const paginasTexto = await extrairTextoPorPagina(buffer);
@@ -13,6 +15,8 @@ async function processarHolerite(buffer: Buffer): Promise<TranscricaoValue> {
     if (reconhecido) {
       pages.push(...reconhecido);
     } else {
+      // TODO: fallback de OCR pra holerite ainda nao implementado
+      // (so cartao de ponto usa OCR nesta entrega - ver SOLUCAO.md).
       pages.push({ page: p.page, year: "", month: "", fields: [], bases: [] });
     }
   }
@@ -25,13 +29,20 @@ async function processarCartaoPonto(buffer: Buffer): Promise<TranscricaoValue> {
   const pages: CartaoPontoPage[] = [];
 
   for (const p of paginasTexto) {
-    const reconhecido = tentarParsearCartaoPonto(p.texto, p.page);
-    if (reconhecido) {
-      pages.push(reconhecido);
-    } else {
-      // Sem camada de texto reconhecivel (documento escaneado) - OCR ainda
-      // nao implementado pra cartao de ponto. Pagina fica honestamente
-      // vazia em vez de sumir ou inventar dado.
+    if (p.temCamadaTexto) {
+      const reconhecido = tentarParsearCartaoPonto(p.texto, p.page);
+      pages.push(reconhecido ?? { page: p.page, days: [] });
+      continue;
+    }
+
+    // Sem camada de texto (documento escaneado) - passa por OCR.
+    try {
+      const imagem = await renderizarPaginaComoImagem(buffer, p.page);
+      const textoOcr = await ocrImagem(imagem);
+      const reconhecido = tentarParsearCartaoPontoOCR(textoOcr, p.page);
+      pages.push(reconhecido ?? { page: p.page, days: [] });
+    } catch {
+      // OCR falhou (imagem corrompida, etc) - pagina fica honestamente vazia.
       pages.push({ page: p.page, days: [] });
     }
   }
