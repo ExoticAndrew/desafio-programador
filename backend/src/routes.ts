@@ -1,4 +1,4 @@
-﻿import { Router, Request, Response, NextFunction } from "express";
+import { Router, Request, Response, NextFunction } from "express";
 import multer from "multer";
 import { randomUUID } from "crypto";
 import { salvar, buscar, atualizarValue } from "./store";
@@ -45,7 +45,7 @@ router.post(
     const id = randomUUID();
     const transcricao: Transcricao = { id, tipo, status: "processando", erro: null, value: null };
     salvar(transcricao);
-    iniciarProcessamento(id);
+    iniciarProcessamento(id, arquivo.buffer, tipo);
 
     res.status(202).json({ id });
   }
