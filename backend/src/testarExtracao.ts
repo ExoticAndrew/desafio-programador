@@ -1,22 +1,25 @@
 ﻿import fs from "fs";
 import path from "path";
 import { extrairTextoPorPagina } from "./pdfText";
-import { tentarLayoutDeclaracao } from "./holeriteDeclaracao";
+import { tentarParsearHolerite } from "./holeriteRouter";
 
 async function main() {
   const pasta = path.join(__dirname, "..", "..", "exemplos");
-  const buffer = fs.readFileSync(path.join(pasta, "payroll-02.pdf"));
-  const paginas = await extrairTextoPorPagina(buffer);
+  const arquivos = ["payroll-01.pdf", "payroll-02.pdf", "payroll-03.pdf", "payroll-04.pdf"];
 
-  for (const p of paginas) {
-    const resultado = tentarLayoutDeclaracao(p.texto, p.page);
-    console.log(`\n=== pagina ${p.page} ===`);
-    if (!resultado) {
-      console.log("NAO RECONHECIDO pelo layout declaracao");
-      continue;
-    }
-    for (const competencia of resultado) {
-      console.log(`  ${competencia.month}/${competencia.year} | ${competencia.fields.length} campos | ${competencia.bases.length} bases`);
+  for (const arquivo of arquivos) {
+    const buffer = fs.readFileSync(path.join(pasta, arquivo));
+    const paginas = await extrairTextoPorPagina(buffer);
+    console.log(`\n### ${arquivo} ###`);
+    for (const p of paginas) {
+      const resultado = tentarParsearHolerite(p.texto, p.page);
+      if (!resultado) {
+        console.log(`  pagina ${p.page}: NAO RECONHECIDO (cai pro OCR)`);
+        continue;
+      }
+      for (const c of resultado) {
+        console.log(`  pagina ${p.page}: ${c.month}/${c.year} | ${c.fields.length} campos | ${c.bases.length} bases`);
+      }
     }
   }
 }
