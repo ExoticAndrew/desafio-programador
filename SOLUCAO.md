@@ -83,3 +83,7 @@ Formulario de upload (`UploadForm.tsx`) com escolha do tipo, envio via `FormData
 **Decisao - URL da API configuravel:** `VITE_API_URL` via variavel de ambiente, com fallback pra `http://localhost:3000` em dev. Precisa ser setada corretamente no Docker Compose/deploy final.
 
 **Decisao - tipos duplicados:** `frontend/src/types.ts` espelha manualmente os tipos do backend (`backend/src/types.ts`) - sem workspace compartilhado entre os dois pacotes npm, entao qualquer mudanca no contrato precisa ser replicada nos dois lados manualmente. Mesmo risco ja documentado para a logica de avisos derivados.
+
+## PDF original em memoria
+
+O buffer do PDF enviado e guardado em memoria (Map separado, `buffersPdf` em `store.ts`), servido via `GET /api/transcricoes/:id/pdf`, so para alimentar o visualizador no frontend (`<embed>` nativo do navegador). Decisao especifica para o escopo do desafio - evita complexidade de armazenamento persistente sem necessidade. Em producao, exigiria definir estrategia adequada de armazenamento e retencao/PII para os PDFs originais (hoje ficam na memoria pelo tempo de vida do processo, sem limite nem expiracao).
