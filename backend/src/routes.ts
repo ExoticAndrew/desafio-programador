@@ -52,9 +52,20 @@ router.get("/transcricoes/:id", (req: Request, res: Response) => {
   res.status(200).json(transcricao);
 });
 
+function valueEhValido(value: unknown): value is { pages: unknown[] } {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    Array.isArray((value as Record<string, unknown>).pages)
+  );
+}
+
 router.put("/transcricoes/:id", (req: Request, res: Response) => {
-  const { value } = req.body;
-  const atualizado = atualizarValue(req.params.id as string, value);
+  const { value } = req.body ?? {};
+  if (!valueEhValido(value)) {
+    return res.status(400).json({ erro: "value deve ser um objeto com a propriedade pages (array)" });
+  }
+  const atualizado = atualizarValue(req.params.id as string, value as Transcricao["value"]);
   if (!atualizado) return res.status(404).json({ erro: "transcricao nao encontrada" });
   res.status(200).json(atualizado);
 });
@@ -102,6 +113,7 @@ router.get("/transcricoes/:id/pdf", (req: Request, res: Response) => {
 });
 
 export default router;
+
 
 
 
