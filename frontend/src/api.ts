@@ -2,7 +2,7 @@
 
 // URL configuravel via variavel de ambiente (Vite) - default assume
 // backend rodando local na 3000, ajustavel no .env em producao/Docker.
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+export const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 export async function enviarTranscricao(arquivo: File, tipo: TipoDocumento): Promise<{ id: string }> {
   const formData = new FormData();
@@ -29,3 +29,16 @@ export async function buscarTranscricao(id: string): Promise<Transcricao> {
   }
   return resposta.json();
 }
+
+export async function salvarTranscricao(id: string, value: Transcricao["value"]): Promise<Transcricao> {
+  const resposta = await fetch(`${API_URL}/api/transcricoes/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ value }),
+  });
+  if (!resposta.ok) {
+    throw new Error(`Falha ao salvar correcoes (status ${resposta.status})`);
+  }
+  return resposta.json();
+}
+

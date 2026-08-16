@@ -2,6 +2,7 @@
 import { Container, Typography, Box } from "@mui/material";
 import { UploadForm } from "./components/UploadForm";
 import { TabelaRevisao } from "./components/TabelaRevisao";
+import { BotoesDownload } from "./components/BotoesDownload";
 import type { Transcricao } from "./types";
 
 function App() {
@@ -21,6 +22,7 @@ function App() {
             Transcricao concluida (id: {resultado.id})
           </Typography>
           <TabelaRevisao transcricao={resultado} />
+          <BotoesDownload id={resultado.id} />
         </Box>
       )}
     </Container>
