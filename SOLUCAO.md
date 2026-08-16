@@ -87,3 +87,16 @@ Formulario de upload (`UploadForm.tsx`) com escolha do tipo, envio via `FormData
 ## PDF original em memoria
 
 O buffer do PDF enviado e guardado em memoria (Map separado, `buffersPdf` em `store.ts`), servido via `GET /api/transcricoes/:id/pdf`, so para alimentar o visualizador no frontend (`<embed>` nativo do navegador). Decisao especifica para o escopo do desafio - evita complexidade de armazenamento persistente sem necessidade. Em producao, exigiria definir estrategia adequada de armazenamento e retencao/PII para os PDFs originais (hoje ficam na memoria pelo tempo de vida do processo, sem limite nem expiracao).
+
+## Seguranca - revisao final
+
+- Timeout de processamento: 3 minutos por transcricao (`worker.ts`). Protege contra status preso em "processando" indefinidamente (OCR travado, PDF corrompido) - mas nao cancela o trabalho de fato, so evita que o status fique preso. Cancelamento real exigiria propagar AbortController ate o Tesseract, fora do escopo.
+- Sem PII em log: confirmado por revisao manual - o unico console.log que roda em producao (index.ts) e "Backend rodando na porta X", sem dado de documento algum. Scripts de depuracao (testarX.ts) tem logs de conteudo real, mas nunca rodam dentro do servidor Express - sao scripts standalone chamados manualmente via ts-node, nao fazem parte do runtime.
+- Upload: magic bytes (%PDF-) + limite de 20MB, ambos retornando 400 sem derrubar o processo.
+
+## Politica de retencao
+
+- PDFs originais e transcricoes ficam em memoria (Map), pelo tempo de vida do processo - sem persistencia em disco, sem banco.
+- Nao ha expiracao/limpeza automatica implementada: os dados ficam ate o processo reiniciar (redeploy, restart do container, ou o servico "dormir" no free tier).
+- Uploads simultaneos: sem fila/limite - cada requisicao processa de forma independente e concorrente. Em memoria RAM limitada (free tier: 512MB), um numero grande de uploads simultaneos de PDFs grandes poderia esgotar memoria - risco conhecido, nao mitigado nesta entrega (fora do escopo dado o volume esperado no desafio).
+- Em producao real, isso exigiria: expiracao automatica dos dados (ex: TTL de X horas), armazenamento persistente com politica de retencao explicita (ex: apagar PDF original apos N dias, manter so a transcricao), e criptografia em repouso dado que os documentos contem CPF, salario e dados pessoais sensiveis.

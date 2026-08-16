@@ -50,11 +50,22 @@ async function processarCartaoPonto(buffer: Buffer): Promise<TranscricaoValue> {
   return { pages };
 }
 
+const TIMEOUT_PROCESSAMENTO_MS = 3 * 60 * 1000;
+
+function comTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error("tempo de processamento excedido")), ms)
+    ),
+  ]);
+}
+
 export function iniciarProcessamento(id: string, buffer: Buffer, tipo: TipoDocumento): void {
   (async () => {
     try {
-      const value: TranscricaoValue =
-        tipo === "holerite" ? await processarHolerite(buffer) : await processarCartaoPonto(buffer);
+      const trabalho = tipo === "holerite" ? processarHolerite(buffer) : processarCartaoPonto(buffer);
+      const value: TranscricaoValue = await comTimeout(trabalho, TIMEOUT_PROCESSAMENTO_MS);
 
       const atual = buscar(id);
       if (!atual) return;
@@ -67,3 +78,4 @@ export function iniciarProcessamento(id: string, buffer: Buffer, tipo: TipoDocum
     }
   })();
 }
+
