@@ -16,3 +16,14 @@ describe("nunca produz data impossivel", () => {
     expect(resultado!.days[0].date_raw).toBe("01/??/2010");
   });
 });
+
+describe("nunca descarta batida ilegivel em silencio", () => {
+  it("horario nao reconhecivel vira ??:?? em vez de sumir", () => {
+    const texto = `Mês/Ano: 05/2010
+01SEG 12:5-1800 12:00-13:00`;
+    const resultado = tentarParsearCartaoPontoOCR(texto, 1);
+    const dia1 = resultado!.days[0];
+    expect(dia1.punches).toHaveLength(4);
+    expect(dia1.punches[0].time_hhmm).toBe("??:??");
+  });
+});

@@ -47,8 +47,8 @@ export function tentarParsearCartaoPontoOCR(texto: string, page: number): Cartao
       while ((m = RE_PAR_HORARIO.exec(linhaOriginal)) !== null) {
         const entrada = normalizarHorario(m[1]);
         const saida = normalizarHorario(m[2]);
-        if (entrada) punches.push({ kind: "IN", time_raw: m[1], time_hhmm: entrada });
-        if (saida) punches.push({ kind: "OUT", time_raw: m[2], time_hhmm: saida });
+        punches.push({ kind: "IN", time_raw: m[1], time_hhmm: entrada ?? "??:??" });
+        punches.push({ kind: "OUT", time_raw: m[2], time_hhmm: saida ?? "??:??" });
       }
     }
 
@@ -57,5 +57,6 @@ export function tentarParsearCartaoPontoOCR(texto: string, page: number): Cartao
 
   return days.length > 0 ? { page, days } : null;
 }
+
 
 
