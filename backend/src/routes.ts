@@ -1,20 +1,18 @@
-import { Router, Request, Response, NextFunction } from "express";
+﻿import { Router, Request, Response, NextFunction } from "express";
 import multer from "multer";
 import { randomUUID } from "crypto";
 import { salvar, buscar, atualizarValue } from "./store";
 import { iniciarProcessamento } from "./worker";
 import { Transcricao, TipoDocumento } from "./types";
+import { gerarXlsx, gerarCsv } from "./planilha";
 
 const router = Router();
-
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 20 * 1024 * 1024 },
 });
-
 const TIPOS_VALIDOS: TipoDocumento[] = ["cartao-ponto", "holerite"];
 
-// PDF real comeca com "%PDF-" nos primeiros bytes. Extensao sozinha nao prova nada.
 function ehPdfValido(buffer: Buffer): boolean {
   return buffer.subarray(0, 5).toString("ascii") === "%PDF-";
 }
@@ -33,20 +31,16 @@ router.post(
   (req: Request, res: Response) => {
     const { tipo } = req.body ?? {};
     const arquivo = req.file;
-
     if (!arquivo || !TIPOS_VALIDOS.includes(tipo)) {
       return res.status(400).json({ erro: "arquivo e tipo (cartao-ponto|holerite) sao obrigatorios" });
     }
-
     if (!ehPdfValido(arquivo.buffer)) {
       return res.status(400).json({ erro: "arquivo enviado nao e um PDF valido" });
     }
-
     const id = randomUUID();
     const transcricao: Transcricao = { id, tipo, status: "processando", erro: null, value: null };
     salvar(transcricao);
     iniciarProcessamento(id, arquivo.buffer, tipo);
-
     res.status(202).json({ id });
   }
 );
@@ -64,15 +58,35 @@ router.put("/transcricoes/:id", (req: Request, res: Response) => {
   res.status(200).json(atualizado);
 });
 
-router.get("/transcricoes/:id/planilha", (req: Request, res: Response) => {
+router.get("/transcricoes/:id/planilha", async (req: Request, res: Response) => {
   const transcricao = buscar(req.params.id as string);
   if (!transcricao) return res.status(404).json({ erro: "transcricao nao encontrada" });
+  if (transcricao.status !== "concluido") {
+    return res.status(409).json({ erro: "transcricao ainda nao concluida" });
+  }
 
   const formato = (req.query.formato as string) || "xlsx";
+
   if (formato === "json") {
     return res.status(200).json(transcricao.value);
   }
-  return res.status(501).json({ erro: `formato ${formato} ainda nao implementado (passo 9)` });
+
+  if (formato === "csv") {
+    const csv = "\uFEFF" + gerarCsv(transcricao);
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader("Content-Disposition", `attachment; filename="planilha-${transcricao.id}.csv"`);
+    return res.status(200).send(csv);
+  }
+
+  if (formato === "xlsx") {
+    const buffer = await gerarXlsx(transcricao);
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    res.setHeader("Content-Disposition", `attachment; filename="planilha-${transcricao.id}.xlsx"`);
+    return res.status(200).send(buffer);
+  }
+
+  return res.status(400).json({ erro: `formato ${formato} nao suportado (use xlsx, csv ou json)` });
 });
 
 export default router;
+
