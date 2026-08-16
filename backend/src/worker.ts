@@ -50,7 +50,7 @@ async function processarCartaoPonto(buffer: Buffer): Promise<TranscricaoValue> {
   return { pages };
 }
 
-const TIMEOUT_PROCESSAMENTO_MS = 3 * 60 * 1000;
+const TIMEOUT_PROCESSAMENTO_MS = 6 * 60 * 1000;
 
 function comTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   return Promise.race([
@@ -78,4 +78,5 @@ export function iniciarProcessamento(id: string, buffer: Buffer, tipo: TipoDocum
     }
   })();
 }
+
 
