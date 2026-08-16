@@ -45,10 +45,23 @@ export function TabelaRevisao({ transcricao }: Props) {
 
   const pagesCartao = (valor?.pages ?? []) as CartaoPontoPage[];
   const pagesHolerite = (valor?.pages ?? []) as HoleritePage[];
-  const tabelaCartao = useMemo(() => transformarCartaoPonto(pagesCartao), [pagesCartao]);
-  const tabelaHolerite = useMemo(() => transformarHolerite(pagesHolerite), [pagesHolerite]);
-  const avisosCartao = useMemo(() => calcularAvisosCartaoPonto(pagesCartao), [pagesCartao]);
-  const avisosHolerite = useMemo(() => calcularAvisosHolerite(pagesHolerite), [pagesHolerite]);
+  const ehCartaoPonto = transcricao.tipo === "cartao-ponto";
+  const tabelaCartao = useMemo(
+    () => (ehCartaoPonto ? transformarCartaoPonto(pagesCartao) : { colunas: [], linhas: [] }),
+    [ehCartaoPonto, pagesCartao]
+  );
+  const tabelaHolerite = useMemo(
+    () => (!ehCartaoPonto ? transformarHolerite(pagesHolerite) : { colunas: [], linhas: [] }),
+    [ehCartaoPonto, pagesHolerite]
+  );
+  const avisosCartao = useMemo(
+    () => (ehCartaoPonto ? calcularAvisosCartaoPonto(pagesCartao) : new Map()),
+    [ehCartaoPonto, pagesCartao]
+  );
+  const avisosHolerite = useMemo(
+    () => (!ehCartaoPonto ? calcularAvisosHolerite(pagesHolerite) : new Map()),
+    [ehCartaoPonto, pagesHolerite]
+  );
 
   if (!valor) return null;
 
@@ -185,3 +198,5 @@ export function TabelaRevisao({ transcricao }: Props) {
     </Box>
   );
 }
+
+
