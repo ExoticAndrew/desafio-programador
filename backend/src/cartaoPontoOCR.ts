@@ -22,7 +22,8 @@ function normalizarHorario(token: string): string | null {
 export function tentarParsearCartaoPontoOCR(texto: string, page: number): CartaoPontoPage | null {
   const mesAno = texto.match(RE_MES_ANO);
   if (!mesAno) return null;
-  const month = mesAno[1].padStart(2, "0");
+  const mesNum = parseInt(mesAno[1], 10);
+  const month = mesNum >= 1 && mesNum <= 12 ? mesAno[1].padStart(2, "0") : "??";
   const year = mesAno[2];
 
   const linhas = texto.split("\n");
@@ -35,7 +36,8 @@ export function tentarParsearCartaoPontoOCR(texto: string, page: number): Cartao
     if (!matchDia) continue; // ruido entre dias (cabecalho, rodape) - ignora
 
     const numeroDia = parseInt(matchDia[1], 10);
-    const dateRaw = `${String(numeroDia).padStart(2, "0")}/${month}/${year}`;
+    const diaStr = numeroDia >= 1 && numeroDia <= 31 ? String(numeroDia).padStart(2, "0") : "??";
+    const dateRaw = `${diaStr}/${month}/${year}`;
     const semBatida = SEM_BATIDA.some((kw) => linhaOriginal.includes(kw));
 
     const punches: Punch[] = [];
@@ -55,3 +57,5 @@ export function tentarParsearCartaoPontoOCR(texto: string, page: number): Cartao
 
   return days.length > 0 ? { page, days } : null;
 }
+
+

@@ -29,7 +29,8 @@ function removerOcorrenciaEQtde(linha: string): string {
 export function tentarParsearCartaoPonto(texto: string, page: number): CartaoPontoPage | null {
   const mesAno = texto.match(RE_MES_ANO);
   if (!mesAno) return null;
-  const month = mesAno[1].padStart(2, "0");
+  const mesNum = parseInt(mesAno[1], 10);
+  const month = mesNum >= 1 && mesNum <= 12 ? mesAno[1].padStart(2, "0") : "??";
   const year = mesAno[2];
 
   const linhas = texto.split("\n");
@@ -65,7 +66,8 @@ export function tentarParsearCartaoPonto(texto: string, page: number): CartaoPon
         // O documento nao imprime a data completa por linha, so o dia do
         // mes - reconstruimos DD/MM/AAAA a partir do cabecalho Mes/Ano da
         // pagina. Decisao documentada no SOLUCAO.md.
-        diaAtualDateRaw = `${String(numeroDia).padStart(2, "0")}/${month}/${year}`;
+        const diaStr = numeroDia >= 1 && numeroDia <= 31 ? String(numeroDia).padStart(2, "0") : "??";
+        diaAtualDateRaw = `${diaStr}/${month}/${year}`;
       }
     }
 
@@ -78,3 +80,6 @@ export function tentarParsearCartaoPonto(texto: string, page: number): CartaoPon
 
   return { page, days };
 }
+
+
+
