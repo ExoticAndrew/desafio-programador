@@ -1,7 +1,7 @@
 ﻿import { Transcricao } from "./types";
 
-// Map em memoria: simples, suficiente pro escopo (1 recurso, sem relacao).
 const transcricoes = new Map<string, Transcricao>();
+const buffersPdf = new Map<string, Buffer>();
 
 export function salvar(t: Transcricao): void {
   transcricoes.set(t.id, t);
@@ -17,4 +17,12 @@ export function atualizarValue(id: string, value: Transcricao["value"]): Transcr
   const atualizado = { ...atual, value };
   transcricoes.set(id, atualizado);
   return atualizado;
+}
+
+export function salvarPdfBuffer(id: string, buffer: Buffer): void {
+  buffersPdf.set(id, buffer);
+}
+
+export function buscarPdfBuffer(id: string): Buffer | undefined {
+  return buffersPdf.get(id);
 }

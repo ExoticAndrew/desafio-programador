@@ -1,7 +1,7 @@
 ﻿import { Router, Request, Response, NextFunction } from "express";
 import multer from "multer";
 import { randomUUID } from "crypto";
-import { salvar, buscar, atualizarValue } from "./store";
+import { salvar, buscar, atualizarValue, salvarPdfBuffer, buscarPdfBuffer } from "./store";
 import { iniciarProcessamento } from "./worker";
 import { Transcricao, TipoDocumento } from "./types";
 import { gerarXlsx, gerarCsv } from "./planilha";
@@ -40,6 +40,7 @@ router.post(
     const id = randomUUID();
     const transcricao: Transcricao = { id, tipo, status: "processando", erro: null, value: null };
     salvar(transcricao);
+    salvarPdfBuffer(id, arquivo.buffer);
     iniciarProcessamento(id, arquivo.buffer, tipo);
     res.status(202).json({ id });
   }
@@ -88,5 +89,20 @@ router.get("/transcricoes/:id/planilha", async (req: Request, res: Response) => 
   return res.status(400).json({ erro: `formato ${formato} nao suportado (use xlsx, csv ou json)` });
 });
 
+router.get("/transcricoes/:id/pdf", (req: Request, res: Response) => {
+  const id = req.params.id as string;
+  const transcricao = buscar(id);
+  if (!transcricao) return res.status(404).json({ erro: "transcricao nao encontrada" });
+
+  const buffer = buscarPdfBuffer(id);
+  if (!buffer) return res.status(404).json({ erro: "pdf original nao disponivel" });
+
+  res.setHeader("Content-Type", "application/pdf");
+  res.status(200).send(buffer);
+});
+
 export default router;
+
+
+
 
