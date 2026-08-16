@@ -15,7 +15,7 @@ import type { TipoDocumento, Transcricao } from "../types";
 import { enviarTranscricao, buscarTranscricao } from "../api";
 
 const INTERVALO_POLLING_MS = 2000;
-const MAX_TENTATIVAS_POLLING = 60;
+const MAX_TENTATIVAS_POLLING = 240; // ~8 minutos - cobre o timeout de 6min do backend com folga
 
 interface Props {
   onConcluido: (transcricao: Transcricao) => void;
@@ -95,3 +95,5 @@ export function UploadForm({ onConcluido }: Props) {
     </Box>
   );
 }
+
+
