@@ -75,3 +75,11 @@ Calculados em `avisos.ts`, como funções puras - nunca armazenados no JSON da t
 
 - OCR do cartão de ponto: alguns dias do mês somem silenciosamente quando o número do dia em si é mal reconhecido pelo Tesseract (não é filtrado de propósito - o parser simplesmente não encontra um padrão de dia válido naquela linha). Validado contra `time-card-02.pdf`: páginas 2 e 3 têm menos de 30/31 dias reconhecidos.
 - Separação `fields`/`bases` nos 3 layouts de holerite foi validada manualmente contra os exemplos fornecidos, mas as heurísticas são específicas desses layouts - um holerite de layout diferente não seria reconhecido (cairia como página vazia).
+
+## Frontend - Upload
+
+Formulario de upload (`UploadForm.tsx`) com escolha do tipo, envio via `FormData`, e polling do status a cada 2s (timeout de ~2min) ate `concluido`/`erro`.
+
+**Decisao - URL da API configuravel:** `VITE_API_URL` via variavel de ambiente, com fallback pra `http://localhost:3000` em dev. Precisa ser setada corretamente no Docker Compose/deploy final.
+
+**Decisao - tipos duplicados:** `frontend/src/types.ts` espelha manualmente os tipos do backend (`backend/src/types.ts`) - sem workspace compartilhado entre os dois pacotes npm, entao qualquer mudanca no contrato precisa ser replicada nos dois lados manualmente. Mesmo risco ja documentado para a logica de avisos derivados.
